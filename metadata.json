@@ -1,0 +1,7 @@
+{
+  "name": "Japan Weather Archive Explorer",
+  "description": "A sophisticated web application to explore historical weather data across Japan using Open-Meteo and Gemini AI for intelligent climate analysis.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
