@@ -10,7 +10,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Area,
 } from 'recharts';
 import { WeatherDataPoint } from '../types';
 
@@ -21,9 +20,8 @@ interface Props {
 const WeatherChart: React.FC<Props> = ({ data }) => {
   const [visibleMetrics, setVisibleMetrics] = useState({
     temp: true,
+    apparent: true,
     precip: true,
-    humidity: true,
-    wind: false,
   });
 
   const formattedData = data.map((d) => ({
@@ -46,104 +44,128 @@ const WeatherChart: React.FC<Props> = ({ data }) => {
   );
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">詳細コンポジットチャート</h3>
+    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Weather Composite Timeline</h3>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">気温と降水量の相関推移</p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <Toggle metric="temp" label="気温" color="#ef4444" />
-          <Toggle metric="precip" label="降水" color="#0ea5e9" />
-          <Toggle metric="humidity" label="湿度" color="#3b82f6" />
-          <Toggle metric="wind" label="風速" color="#10b981" />
+          <Toggle metric="apparent" label="体感温度" color="#f97316" />
+          <Toggle metric="precip" label="降水量" color="#0ea5e9" />
         </div>
       </div>
 
-      <div className="h-[450px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={formattedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis 
-              dataKey="time" 
-              interval={2} 
-              fontSize={11} 
-              tick={{ fill: '#64748b' }} 
-            />
-            <YAxis 
-              yAxisId="temp"
-              fontSize={10} 
-              tick={{ fill: '#64748b' }} 
-              domain={['auto', 'auto']}
-              hide={!visibleMetrics.temp}
-            />
-            <YAxis 
-              yAxisId="percent"
-              orientation="right"
-              fontSize={10} 
-              tick={{ fill: '#64748b' }} 
-              hide={!visibleMetrics.humidity}
-            />
-            <YAxis 
-              yAxisId="precip"
-              orientation="right"
-              fontSize={10} 
-              tick={{ fill: '#64748b' }} 
-              hide={!visibleMetrics.precip && !visibleMetrics.wind}
-            />
-            
-            <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-            />
-            <Legend verticalAlign="top" height={30}/>
-
-            {visibleMetrics.humidity && (
-              <Area
-                yAxisId="percent"
-                name="湿度 (%)"
-                type="monotone"
-                dataKey="relative_humidity_2m"
-                fill="#dbeafe"
-                stroke="#3b82f6"
-                strokeWidth={1}
-                fillOpacity={0.3}
+      {/* Mobile Scroll Wrapper */}
+      <div className="overflow-x-auto pb-4 scrollbar-hide sm:scrollbar-default">
+        <div className="h-[450px] min-w-[750px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={formattedData} margin={{ top: 20, right: 20, left: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis 
+                dataKey="time" 
+                interval={1} 
+                fontSize={11} 
+                tick={{ fill: '#64748b', fontWeight: 'bold' }} 
+                axisLine={{ stroke: '#e2e8f0' }}
               />
-            )}
-            
-            {visibleMetrics.precip && (
-              <Bar
-                yAxisId="precip"
-                name="降水量 (mm)"
-                dataKey="precipitation"
-                fill="#0ea5e9"
-                radius={[2, 2, 0, 0]}
-                barSize={10}
-              />
-            )}
-
-            {visibleMetrics.temp && (
-              <Line
+              
+              {/* Left Axis: Temperatures (Red/Orange) */}
+              <YAxis 
                 yAxisId="temp"
-                name="気温 (°C)"
-                type="monotone"
-                dataKey="temperature_2m"
-                stroke="#ef4444"
-                strokeWidth={3}
-                dot={false}
+                fontSize={10} 
+                tick={{ fill: '#ef4444', fontWeight: 'bold' }} 
+                axisLine={{ stroke: '#fecaca' }}
+                domain={['auto', 'auto']}
+                label={{ 
+                  value: '温度 (°C)', 
+                  angle: -90, 
+                  position: 'insideLeft', 
+                  offset: -5,
+                  style: { textAnchor: 'middle', fill: '#ef4444', fontSize: 10, fontWeight: 'black' } 
+                }}
+                hide={!visibleMetrics.temp && !visibleMetrics.apparent}
               />
-            )}
-
-            {visibleMetrics.wind && (
-              <Line
+              
+              {/* Right Axis: Precipitation (Blue) */}
+              <YAxis 
                 yAxisId="precip"
-                name="風速 (m/s)"
-                type="monotone"
-                dataKey="wind_speed_10m"
-                stroke="#10b981"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={false}
+                orientation="right"
+                fontSize={10} 
+                tick={{ fill: '#0ea5e9', fontWeight: 'bold' }} 
+                axisLine={{ stroke: '#bae6fd' }}
+                label={{ 
+                  value: '降水量 (mm)', 
+                  angle: 90, 
+                  position: 'insideRight', 
+                  offset: -5,
+                  style: { textAnchor: 'middle', fill: '#0ea5e9', fontSize: 10, fontWeight: 'black' } 
+                }}
+                hide={!visibleMetrics.precip}
               />
-            )}
-          </ComposedChart>
-        </ResponsiveContainer>
+              
+              <Tooltip 
+                contentStyle={{ 
+                  borderRadius: '16px', 
+                  border: 'none', 
+                  boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                  padding: '12px'
+                }}
+                itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                labelStyle={{ marginBottom: '8px', color: '#64748b', fontWeight: 'black' }}
+              />
+              
+              <Legend verticalAlign="top" height={40} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+              
+              {visibleMetrics.precip && (
+                <Bar
+                  yAxisId="precip"
+                  name="降水量"
+                  dataKey="precipitation"
+                  fill="#0ea5e9"
+                  fillOpacity={0.6}
+                  radius={[4, 4, 0, 0]}
+                  barSize={12}
+                />
+              )}
+
+              {visibleMetrics.temp && (
+                <Line
+                  yAxisId="temp"
+                  name="気温"
+                  type="monotone"
+                  dataKey="temperature_2m"
+                  stroke="#ef4444"
+                  strokeWidth={3}
+                  dot={false}
+                  animationDuration={1500}
+                />
+              )}
+
+              {visibleMetrics.apparent && (
+                <Line
+                  yAxisId="temp"
+                  name="体感温度"
+                  type="monotone"
+                  dataKey="apparent_temperature"
+                  stroke="#f97316"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={false}
+                  animationDuration={2000}
+                />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2 justify-center sm:hidden">
+        <div className="w-8 h-1 bg-slate-200 rounded-full">
+          <div className="w-1/3 h-full bg-slate-400 rounded-full animate-pulse"></div>
+        </div>
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Swipe to scroll chart</span>
       </div>
     </div>
   );
